@@ -13,7 +13,7 @@
 
     <properties>
         <java.version>17</java.version>
-        <spring-boot.version>3.1.2</spring-boot.version>
+        <spring-boot.version>3.1.2</spring-boot.version> <!-- Make sure this is the version you want -->
     </properties>
 
     <dependencies>
@@ -21,24 +21,28 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+            <version>3.1.2</version> <!-- Added version -->
         </dependency>
 
         <!-- Spring Boot Starter Data MongoDB -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-mongodb</artifactId>
+            <version>3.1.2</version> <!-- Added version -->
         </dependency>
 
         <!-- Spring Boot Starter Validation -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
+            <version>3.1.2</version> <!-- Added version -->
         </dependency>
 
         <!-- Lombok (for reducing boilerplate code) -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <version>1.18.22</version> <!-- Added version -->
             <scope>provided</scope>
         </dependency>
 
@@ -46,6 +50,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <version>3.1.2</version> <!-- Added version -->
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -56,6 +61,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>3.1.2</version> <!-- Added version -->
             </plugin>
         </plugins>
     </build>

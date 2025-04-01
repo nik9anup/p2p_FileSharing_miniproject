@@ -1,27 +1,31 @@
-package com.fileshare.controller;
-
-import com.fileshare.model.Room;
-import com.fileshare.repository.RoomRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+package com.fileshare.model;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/api/rooms")
-public class RoomController {
+public class Room {
+    private String roomName;
+    private List<String> users;
 
-    @Autowired
-    private RoomRepository roomRepository;
-
-    @PostMapping("/create")
-    public Room createRoom(@RequestParam String roomName) {
-        Room room = new Room(roomName);
-        return roomRepository.save(room);
+    // Constructor
+    public Room(String roomName, List<String> users) {
+        this.roomName = roomName;
+        this.users = users;
     }
 
-    @GetMapping("/list")
-    public List<Room> getAllRooms() {
-        return roomRepository.findAll();
+    // Getters and Setters
+    public String getRoomName() {
+        return roomName;
+    }
+
+    public void setRoomName(String roomName) {
+        this.roomName = roomName;
+    }
+
+    public List<String> getUsers() {
+        return users;
+    }
+
+    public void setUsers(List<String> users) {
+        this.users = users;
     }
 }
