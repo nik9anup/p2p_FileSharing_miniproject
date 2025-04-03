@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="10" alignment="CENTER" xmlns="http://javafx.com/javafx/8.0" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.fileshare.gui.RoomController">
+    
+    <Label text="Enter Room Name:"/>
+    <TextField fx:id="roomNameField" promptText="Room Name"/>
+    <Button fx:id="joinRoomButton" text="Join Room"/>
+    
+    <Label text="Files in Room:"/>
+    <ListView fx:id="fileListView"/>
+    
+    <Button fx:id="uploadButton" text="Upload File"/>
+    
+</VBox>

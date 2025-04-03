@@ -1,31 +1,36 @@
 package com.fileshare.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class Room {
-    private String roomName;
-    private List<String> users;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-    // Constructor
+@Document(collection = "rooms")
+public class Room {
+    @Id
+    private String id;
+    private String roomName;
+    private List<String> users; // Store user IDs
+
+    // Constructor for new room (empty user list)
+    public Room(String roomName) {
+        this.roomName = roomName;
+        this.users = new ArrayList<>();
+    }
+
+    // Constructor for room with users
     public Room(String roomName, List<String> users) {
         this.roomName = roomName;
         this.users = users;
     }
 
-    // Getters and Setters
-    public String getRoomName() {
-        return roomName;
-    }
+    public String getRoomName() { return roomName; }
+    public List<String> getUsers() { return users; }
 
-    public void setRoomName(String roomName) {
-        this.roomName = roomName;
-    }
-
-    public List<String> getUsers() {
-        return users;
-    }
-
-    public void setUsers(List<String> users) {
-        this.users = users;
+    public void addUser(String userId) {
+        if (!users.contains(userId)) {
+            users.add(userId);
+        }
     }
 }

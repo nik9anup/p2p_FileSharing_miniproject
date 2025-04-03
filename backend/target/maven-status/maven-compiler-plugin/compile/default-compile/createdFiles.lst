@@ -1,4 +1,6 @@
+com\fileshare\model\FileMetadata.class
 com\fileshare\P2PFileSharingApplication.class
+com\fileshare\repository\FileRepository.class
 com\fileshare\controller\RoomController.class
 com\fileshare\service\UserService.class
 com\fileshare\model\Room.class
