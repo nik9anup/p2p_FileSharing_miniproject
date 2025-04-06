@@ -2,17 +2,25 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
 
-<VBox spacing="10" alignment="CENTER" xmlns="http://javafx.com/javafx/8.0" xmlns:fx="http://javafx.com/fxml/1"
+<VBox spacing="15" alignment="CENTER" xmlns="http://javafx.com/javafx/8.0" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.fileshare.gui.RoomController">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label text="Enter Room Name:" style="-fx-font-size: 14px;"/>
+    <TextField fx:id="roomNameField" promptText="Room Name" maxWidth="200"/>
+
+    <Button fx:id="joinRoomButton" text="Join Room" maxWidth="150"/>
+
+    <Label text="Files in Room:" style="-fx-font-size: 14px;"/>
+
     
-    <Label text="Enter Room Name:"/>
-    <TextField fx:id="roomNameField" promptText="Room Name"/>
-    <Button fx:id="joinRoomButton" text="Join Room"/>
-    
-    <Label text="Files in Room:"/>
-    <ListView fx:id="fileListView"/>
-    
-    <Button fx:id="uploadButton" text="Upload File"/>
-    
+    <ListView fx:id="fileListView" maxHeight="200" maxWidth="300"/>
+
+    <Button fx:id="uploadButton" text="Upload File" maxWidth="150"/>
+
 </VBox>

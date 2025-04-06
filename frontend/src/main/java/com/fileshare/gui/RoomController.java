@@ -1,22 +1,35 @@
 package com.fileshare.gui;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+
+
 public class RoomController {
     @FXML private TextField roomNameField;
     @FXML private Button joinRoomButton;
-    @FXML private ListView<String> fileListView;
+    @FXML private ListView<FileEntry> fileListView;
     @FXML private Button uploadButton;
 
     private static RoomController instance;
@@ -58,20 +71,48 @@ public class RoomController {
         });
     }
 
-    @FXML
-    private void initialize() {
-        joinRoomButton.setOnAction(event -> joinRoom());
-        uploadButton.setOnAction(event -> uploadFile());
-    }
+        @FXML
+private void initialize() {
+    joinRoomButton.setOnAction(event -> joinRoom());
+    uploadButton.setOnAction(event -> uploadFile());
 
-    private void joinRoom() {
-        String roomName = roomNameField.getText().trim();
-        if (roomName.isEmpty()) {
-            System.out.println("Enter a valid room name.");
-            return;
+    
+    fileListView.setCellFactory(lv -> new ListCell<FileEntry>() {
+        private final Button downloadButton = new Button("Download");
+
+        {
+            downloadButton.setOnAction(event -> {
+                FileEntry file = getItem();
+                if (file != null) {
+                    downloadFile(file);
+                }
+            });
         }
-        System.out.println("Joined Room: " + roomName);
+
+        @Override
+        protected void updateItem(FileEntry file, boolean empty) {
+            super.updateItem(file, empty);
+
+            if (empty || file == null) {
+                setText(null);
+                setGraphic(null);
+            } else {
+                setText(file.getName());
+                setGraphic(downloadButton);
+            }
+        }
+    });
+}
+
+private void joinRoom() {
+    String roomName = roomNameField.getText().trim();
+    if (roomName.isEmpty()) {
+        System.out.println("Enter a valid room name.");
+        return;
     }
+    System.out.println("Joined Room: " + roomName);
+    loadFilesFromRoom(roomName); // ✅ load actual file list from backend
+}
 
     private void uploadFile() {
         FileChooser fileChooser = new FileChooser();
@@ -80,7 +121,73 @@ public class RoomController {
 
         if (selectedFile != null) {
             System.out.println("Uploading file: " + selectedFile.getAbsolutePath());
-            FileTransferHandler.sendFile(selectedFile.getAbsolutePath(), "127.0.0.1");
+            FileTransferHandler.uploadToServer(selectedFile.getAbsolutePath(), roomNameField.getText());
+
         }
     }
+
+    private void loadFilesFromRoom(String room) {
+    String endpoint = "http://localhost:8081/files/" + room;
+    try {
+        URL url = new URL(endpoint);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        StringBuilder response = new StringBuilder();
+        String line;
+
+        while ((line = in.readLine()) != null) {
+            response.append(line);
+        }
+
+        in.close();
+        conn.disconnect();
+
+        JSONArray jsonArray = new JSONArray(response.toString());
+
+        Platform.runLater(() -> {
+            fileListView.getItems().clear();
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject fileObj = jsonArray.getJSONObject(i);
+                //String fileId = fileObj.getString("id");
+                String fileId = fileObj.optString("id", "");  // fallback to empty string
+                    String fileName = fileObj.optString("originalFileName", "Unnamed File");
+                    FileEntry entry = new FileEntry(fileId, fileName);
+  // Assuming FileEntry has this constructor
+                fileListView.getItems().add(entry);
+
+
+            }
+        });
+
+    } catch (Exception e) {
+        System.err.println("Error fetching file list: " + e.getMessage());
+    }
+}
+
+private void downloadFile(FileEntry file) {
+    String endpoint = "http://localhost:8081/files/download/" + file.getId();
+    try (InputStream in = new URL(endpoint).openStream()) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setInitialFileName(file.getName());
+        File destination = fileChooser.showSaveDialog(stage);
+        if (destination == null) return;
+
+        try (OutputStream out = new FileOutputStream(destination)) {
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = in.read(buffer)) != -1) {
+                out.write(buffer, 0, bytesRead);
+            }
+            System.out.println("Downloaded: " + destination.getAbsolutePath());
+        }
+    } catch (IOException e) {
+        System.err.println("Download failed: " + e.getMessage());
+    }
+}
+
+
+
+
 }

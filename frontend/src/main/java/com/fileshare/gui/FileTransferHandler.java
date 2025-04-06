@@ -8,8 +8,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -101,6 +103,57 @@ public class FileTransferHandler {
             }
         }).start();
     }
+
+    public static void uploadToServer(String filePath, String room) {
+    File file = new File(filePath);
+    if (!file.exists() || file.isDirectory()) {
+        System.err.println("Invalid file selected.");
+        return;
+    }
+
+    try {
+        String boundary = "===" + System.currentTimeMillis() + "===";
+        URL url = new URL("http://localhost:8081/files/upload");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setDoOutput(true);
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+
+        try (DataOutputStream request = new DataOutputStream(conn.getOutputStream())) {
+            // room field
+            request.writeBytes("--" + boundary + "\r\n");
+            request.writeBytes("Content-Disposition: form-data; name=\"room\"\r\n\r\n");
+            request.writeBytes(room + "\r\n");
+
+            // file field
+            request.writeBytes("--" + boundary + "\r\n");
+            request.writeBytes("Content-Disposition: form-data; name=\"file\"; filename=\"" + file.getName() + "\"\r\n");
+            request.writeBytes("Content-Type: application/octet-stream\r\n\r\n");
+
+            FileInputStream inputStream = new FileInputStream(file);
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                request.write(buffer, 0, bytesRead);
+            }
+            inputStream.close();
+            request.writeBytes("\r\n");
+
+            request.writeBytes("--" + boundary + "--\r\n");
+            request.flush();
+        }
+
+        int responseCode = conn.getResponseCode();
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+            System.out.println("File uploaded successfully.");
+        } else {
+            System.err.println("Upload failed. Response code: " + responseCode);
+        }
+    } catch (IOException e) {
+        System.err.println("Error uploading file: " + e.getMessage());
+    }
+}
+
 
     public static boolean isTransferInProgress(String peerIP) {
         return activeTransfers.containsKey(peerIP);
