@@ -4,4 +4,5 @@ com\fileshare\gui\MainApp.class
 com\fileshare\gui\FileTransferHandler.class
 com\fileshare\gui\RoomController.class
 com\fileshare\gui\WebSocketListener.class
+com\fileshare\util\Config.class
 com\fileshare\gui\RoomController$1.class

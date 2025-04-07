@@ -13,6 +13,8 @@ import java.net.URL;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.fileshare.util.Config;
+
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -123,11 +125,13 @@ private void joinRoom() {
             System.out.println("Uploading file: " + selectedFile.getAbsolutePath());
             FileTransferHandler.uploadToServer(selectedFile.getAbsolutePath(), roomNameField.getText());
 
+
+
         }
     }
 
     private void loadFilesFromRoom(String room) {
-    String endpoint = "http://localhost:8081/files/" + room;
+    String endpoint = Config.getFileListURL(room);
     try {
         URL url = new URL(endpoint);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -167,7 +171,7 @@ private void joinRoom() {
 }
 
 private void downloadFile(FileEntry file) {
-    String endpoint = "http://localhost:8081/files/download/" + file.getId();
+    String endpoint = Config.getDownloadURL(file.getId());
     try (InputStream in = new URL(endpoint).openStream()) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setInitialFileName(file.getName());

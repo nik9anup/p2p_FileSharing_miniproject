@@ -8,12 +8,18 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.fileshare.util.Config;
 
 public class FileTransferHandler {
     private static final int PORT = 5000;
@@ -103,56 +109,53 @@ public class FileTransferHandler {
             }
         }).start();
     }
+public static void uploadToServer(String filePath, String roomName) {
+        try {
+            File file = new File(filePath);
+            String boundary = Long.toHexString(System.currentTimeMillis());
+            String CRLF = "\r\n";
 
-    public static void uploadToServer(String filePath, String room) {
-    File file = new File(filePath);
-    if (!file.exists() || file.isDirectory()) {
-        System.err.println("Invalid file selected.");
-        return;
-    }
+            URL url = new URL(Config.getUploadURL());
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setDoOutput(true);
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
 
-    try {
-        String boundary = "===" + System.currentTimeMillis() + "===";
-        URL url = new URL("http://localhost:8081/files/upload");
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setDoOutput(true);
-        conn.setRequestMethod("POST");
-        conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+            try (
+                OutputStream output = conn.getOutputStream();
+                PrintWriter writer = new PrintWriter(new OutputStreamWriter(output, "UTF-8"), true)
+            ) {
+                // Send room name
+                writer.append("--").append(boundary).append(CRLF);
+                writer.append("Content-Disposition: form-data; name=\"room\"").append(CRLF);
+                writer.append(CRLF).append(roomName).append(CRLF).flush();
 
-        try (DataOutputStream request = new DataOutputStream(conn.getOutputStream())) {
-            // room field
-            request.writeBytes("--" + boundary + "\r\n");
-            request.writeBytes("Content-Disposition: form-data; name=\"room\"\r\n\r\n");
-            request.writeBytes(room + "\r\n");
+                // Send file
+                writer.append("--").append(boundary).append(CRLF);
+                writer.append("Content-Disposition: form-data; name=\"file\"; filename=\"")
+                      .append(file.getName()).append("\"").append(CRLF);
+                writer.append("Content-Type: application/octet-stream").append(CRLF);
+                writer.append(CRLF).flush();
 
-            // file field
-            request.writeBytes("--" + boundary + "\r\n");
-            request.writeBytes("Content-Disposition: form-data; name=\"file\"; filename=\"" + file.getName() + "\"\r\n");
-            request.writeBytes("Content-Type: application/octet-stream\r\n\r\n");
+                try (InputStream input = new FileInputStream(file)) {
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
+                    while ((bytesRead = input.read(buffer)) != -1) {
+                        output.write(buffer, 0, bytesRead);
+                    }
+                    output.flush();
+                }
 
-            FileInputStream inputStream = new FileInputStream(file);
-            byte[] buffer = new byte[4096];
-            int bytesRead;
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                request.write(buffer, 0, bytesRead);
+                writer.append(CRLF).flush();
+                writer.append("--").append(boundary).append("--").append(CRLF).flush();
             }
-            inputStream.close();
-            request.writeBytes("\r\n");
 
-            request.writeBytes("--" + boundary + "--\r\n");
-            request.flush();
+            int responseCode = conn.getResponseCode();
+            System.out.println("Upload response: " + responseCode);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
-        int responseCode = conn.getResponseCode();
-        if (responseCode == HttpURLConnection.HTTP_OK) {
-            System.out.println("File uploaded successfully.");
-        } else {
-            System.err.println("Upload failed. Response code: " + responseCode);
-        }
-    } catch (IOException e) {
-        System.err.println("Error uploading file: " + e.getMessage());
     }
-}
 
 
     public static boolean isTransferInProgress(String peerIP) {
