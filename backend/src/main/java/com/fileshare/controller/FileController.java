@@ -1,7 +1,10 @@
 package com.fileshare.controller;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
@@ -35,16 +38,32 @@ public class FileController {
     }
 
     @GetMapping("/{room}")
-    public List<FileMetadata> listFiles(@PathVariable String room) {
-        return fileService.getFilesByRoom(room);
+    public List<Map<String, Object>> listFiles(@PathVariable String room) {
+        List<FileMetadata> files = fileService.getFilesByRoom(room);
+        return files.stream().map(file -> {
+            Map<String, Object> fileMap = new HashMap<>();
+            fileMap.put("id", file.getId());
+            fileMap.put("originalFileName", file.getOriginalFileName());
+            fileMap.put("room", file.getRoom());
+            return fileMap;
+        }).collect(Collectors.toList());
     }
 
+
     @GetMapping("/download/{id}")
-    public ResponseEntity<InputStreamResource> download(@PathVariable String id) throws IOException {
+public ResponseEntity<InputStreamResource> download(@PathVariable String id) throws IOException {
+    System.out.println("Download request received for file ID: " + id);
+    try {
         GridFsResource resource = fileService.downloadFile(id);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(new InputStreamResource(resource.getInputStream()));
+    } catch (Exception e) {
+        System.err.println("Download failed for ID: " + id);
+        e.printStackTrace(); // log full stack trace
+        throw e;
     }
+}
+
 }

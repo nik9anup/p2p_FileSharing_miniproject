@@ -19,7 +19,9 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
@@ -147,6 +149,7 @@ private void joinRoom() {
 
         in.close();
         conn.disconnect();
+        System.out.println("Full file list JSON: " + response.toString());
 
         JSONArray jsonArray = new JSONArray(response.toString());
 
@@ -155,11 +158,12 @@ private void joinRoom() {
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject fileObj = jsonArray.getJSONObject(i);
                 //String fileId = fileObj.getString("id");
-                String fileId = fileObj.optString("id", "");  // fallback to empty string
-                    String fileName = fileObj.optString("originalFileName", "Unnamed File");
-                    FileEntry entry = new FileEntry(fileId, fileName);
-  // Assuming FileEntry has this constructor
+                String fileId = fileObj.optString("id", fileObj.optString("_id", ""));
+                String fileName = fileObj.optString("originalFileName", "Unnamed File");
+                FileEntry entry = new FileEntry(fileId, fileName);
                 fileListView.getItems().add(entry);
+
+                System.out.println("Full file list JSON: " + response.toString());
 
 
             }
@@ -184,8 +188,12 @@ private void downloadFile(FileEntry file) {
             while ((bytesRead = in.read(buffer)) != -1) {
                 out.write(buffer, 0, bytesRead);
             }
-            System.out.println("Downloaded: " + destination.getAbsolutePath());
         }
+
+        
+        Alert alert = new Alert(Alert.AlertType.INFORMATION, "Downloaded: " + destination.getAbsolutePath(), ButtonType.OK);
+        alert.showAndWait();
+
     } catch (IOException e) {
         System.err.println("Download failed: " + e.getMessage());
     }

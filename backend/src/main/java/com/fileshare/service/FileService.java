@@ -25,19 +25,40 @@ public class FileService {
     @Autowired
     private FileMetadataRepository fileMetadataRepository;
 
-    public String uploadFile(MultipartFile file, String room) throws IOException {
-        ObjectId fileId = gridFsOperations.store(file.getInputStream(), file.getOriginalFilename());
-        FileMetadata metadata = new FileMetadata(room, file.getOriginalFilename());
-        fileMetadataRepository.save(metadata);
-        return fileId.toString();
-    }
+   public String uploadFile(MultipartFile file, String room) throws IOException {
+    ObjectId fileId = gridFsOperations.store(file.getInputStream(), file.getOriginalFilename());
+
+    FileMetadata metadata = new FileMetadata();
+    metadata.setId(fileId.toString()); // ✅ Save the actual GridFS ID
+    metadata.setOriginalFileName(file.getOriginalFilename());
+    metadata.setRoom(room);
+    
+    fileMetadataRepository.save(metadata);
+    return fileId.toString();
+}
+
+
 
     public List<FileMetadata> getFilesByRoom(String room) {
         return fileMetadataRepository.findByRoom(room);
     }
 
-    public GridFsResource downloadFile(String id) {
-        GridFSFile file = gridFsOperations.findOne(query(where("_id").is(new ObjectId(id))));
-        return gridFsOperations.getResource(file);
+   public GridFsResource downloadFile(String id) {
+    System.out.println("📥 Attempting download of ID: " + id);
+
+    // DEBUG: fallback to filename query for testing
+    GridFSFile file = gridFsOperations.findOne(query(where("_id").is(new ObjectId(id))));
+
+    
+    if (file == null) {
+        System.out.println("File not found by filename");
+        throw new IllegalArgumentException("File not found");
     }
+
+    System.out.println("File FOUND by filename: " + file.getFilename());
+
+    return gridFsOperations.getResource(file);
+}
+
+
 }
